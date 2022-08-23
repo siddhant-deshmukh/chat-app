@@ -2,6 +2,7 @@ const Users = require('../models/users');
 const Chat = require('../models/chat')
 const bcrypt = require('bcryptjs')
 const jwt = require("jsonwebtoken");
+const async = require("async")
 const mongoose = require("mongoose")
 
 exports.register_user = async (req,res,next) => {
@@ -82,6 +83,7 @@ exports.login_user = async (req,res,next) =>{
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
         });
+        //console.log(token)
         return res.status(201).json({token});
       }
       res.status(400).send("Invalid Credentials");
@@ -144,6 +146,65 @@ exports.send_message = async (req,res,next) =>{
       }
     }
     return res.status(201).json({a,reciever,user})
+  }catch (err){
+    console.log(err);
+  }
+}
+
+exports.get_user_data = async (req,res,next) =>{
+  try{
+    const friends = {};
+    
+    for(const ele of req.user.contact){
+      //console.log(ele.uId.toString(),friends);
+      const friend = await Users.findById(ele.uId.toString()).select({'password':0});
+      friends[ele.chatId.toString()] = {
+        name : friend.name,
+        email : friend.email,
+        friendId : ele.uId.toString(),
+      }
+      
+    }
+    //console.log(friends)
+    return res.status(201).json({user : req.user ,friends});
+  }catch(err){
+    console.log(err);
+  }
+}
+
+exports.logout_user = async (req,res,next) =>{
+  try{
+    res.clearCookie("access_token");
+    return res.status(201).json({'msg':'sucessfully logout!'});
+  } catch(err){
+    console.log(err);
+  }
+}
+
+exports.get_messages = async (req,res,next) =>{
+  try{
+    const {chatId} = req.body;
+    
+    if(!chatId){
+      res.status(400).json({msg: "All input is required"});
+    }
+
+    const chat = await Chat.findById(chatId);
+    const userId = req.user._id;
+
+    const groupMembers = {};
+    
+    await async.map(chat.users,async (data)=>{
+      let userData = await Users.findById(data).select({'name':1,'email':1});
+      groupMembers[data.toString()] = userData;
+    })
+
+    if(chat.users.includes(userId)){
+      res.status(201).json({messages : chat.messages,groupMembers});
+    }else{
+      res.status(400).json({msg: "Permission denied!"});
+    }
+    
   }catch (err){
     console.log(err);
   }
