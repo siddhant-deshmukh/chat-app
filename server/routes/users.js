@@ -13,7 +13,8 @@ router.post('/',auth,user_controller.get_user_data );
 router.post('/register',  user_controller.register_user)
 router.post('/login', user_controller.login_user)
 router.post('/logout',user_controller.logout_user)
-
+router.post('/connect',auth,user_controller.add_connection)
+router.post('/disconnect',auth,user_controller.remove_connection)
 //app.use('/group',groupRouter)
 //app.use('/personal',personalRouter)
 

@@ -1,4 +1,4 @@
-import React,{useContext,useState} from 'react'
+import React,{useContext,useState,useRef} from 'react'
 import { useEffect } from 'react';
 import {AuthContext} from '../../context/socket'
 import { config } from '../../config';
@@ -7,17 +7,43 @@ import Text from './Text';
 
 function Chat(props) {
   const context = useContext(AuthContext);
-  const {authState,getMessages} = context;
+  const {authState,getMessages,socket} = context;
 
   const [messages,setMessages] = useState([]);
   const [members,setMembers] = useState({});
   const [msg,setMsg] = useState('');
+  
+  const messagesEndRef = useRef(null);
+  const scrollToBottom = () => {
+    messagesEndRef.current.scrollIntoView();
+  };
+  //useEffect(()=> {scrollToBottom()}, [messages]);
 
+  
+  useEffect(()=>{
+    //console.log("This means at some point of time we really came here",socket.id,socket)
+    const handleEventNewMessage = (data)=>{
+        //console.log(data.newMsg)
+        //console.log('!!!!!!!!!!!!!!!!!!!!!1 \n someone has send this message \n !!!!!!!!!!!!!!!!!!!!!!! \n',data)
+        const newMessages = messages.slice();
+        if(data.newMsg.author !== authState.user._id.toString()) newMessages.push(data.newMsg);
+        setMessages(newMessages);
+    
+      }
+
+    socket.on('new message', handleEventNewMessage)
+
+    return ()=>{
+        socket.off('new message', handleEventNewMessage)
+    }
+  },[socket])
+  
   useEffect(()=>{
     if(props.selected !== ''){
         getMessages(props.selected).then(data =>{
             setMessages(data.messages);
             setMembers(data.groupMembers);
+            scrollToBottom();
         });
     }
   },[props.selected])
@@ -40,7 +66,7 @@ function Chat(props) {
         }),
     })
     const ret = await suc.json();
-    console.log(ret);
+    //console.log('ret',ret);
     return ret;
   }
 
@@ -55,6 +81,7 @@ function Chat(props) {
     });
     setMsg('');
   }
+
   return (
     <div className='relative w-full' >
         <div className='overflow-auto w-full h-full pb-12'>
@@ -62,6 +89,7 @@ function Chat(props) {
                 {messages.map((ele,index)=>{
                     return <Text key={index} msg={ele.message} author={members[ele.author].name}/>
                 })}
+                <div ref={messagesEndRef}></div>
             </ul>
         </div>
         <div className='absolute inset-x-0 bottom-0'>

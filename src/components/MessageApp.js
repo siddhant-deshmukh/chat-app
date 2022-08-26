@@ -6,11 +6,11 @@ import Login from './forms/Login'
 
 function MessageApp() {
   const context = useContext(AuthContext);
-  const {isLogedIn,authState,getUserData} = context;
-  console.log(isLogedIn,authState);
+  const {isLogedIn,getUserData} = context;
+  //console.log(isLogedIn,authState);
 
   useEffect(()=>{
-    getUserData()
+    getUserData();
   },[]);
 
   if(isLogedIn){

@@ -13,9 +13,9 @@ function FriendList(props) {
             <h5 className="text-xl font-bold leading-none text-gray-900 dark:text-white">Latest Customers</h5>
       </div>
       <div className="flow-root">
-        <ul role="list" className="divide-y divide-gray-200 dark:divide-gray-700">
+        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {Object.keys(authState.friends).map((ele)=>{
-            console.log(ele,authState.friends[ele]);
+            //console.log(ele,authState.friends[ele]);
             return <FriendCard key={ele} chatId={ele} value= {authState.friends[ele]} setSelected={props.value.setSelected}/>
           })}
         </ul>

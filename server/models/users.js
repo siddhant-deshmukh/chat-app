@@ -6,6 +6,7 @@ const subSchema = new mongoose.Schema({
 },{_id:false})
 const UserSchema = new mongoose.Schema({
     name : {type:String,required:true},
+    socketId : {type:String},
     email: {type:String,required:true,unique:true},
     password: {type:String,required:true},
     groups: [{type: mongoose.Schema.Types.ObjectId, ref: 'product'}],

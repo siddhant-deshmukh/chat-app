@@ -209,3 +209,40 @@ exports.get_messages = async (req,res,next) =>{
     console.log(err);
   }
 }
+
+exports.add_connection = async (req,res,next) => {
+  try{
+
+    const {socketId} = req.body;
+    console.log('add connection   :', req.body)
+    if(!socketId){
+      return res.status(400).json({msg: "All input is required"});
+    }
+
+    if(!req.user.socketId){req.user['socketId']=''};
+    //if(req.user.socketId!=''){
+    //  return res.status(301).json({msg: "Already connected" , socketId:req.user.socketId});
+    //}
+
+    req.user.socketId = socketId;
+
+    const user = await req.user.save();
+
+    return res.status(201).json({msg: "Sucessful" , user});
+  }catch(err){
+    console.log(err);
+  }
+}
+
+exports.remove_connection = async (req,res,next) => {
+  try{
+
+    req.user.socketId = '';
+
+    const user = await req.user.save();
+
+    return res.status(201).json({msg: "Sucessful" , user});
+  }catch(err){
+    console.log(err);
+  }
+}

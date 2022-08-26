@@ -1,17 +1,34 @@
 require("dotenv").config(); 
-var createError = require('http-errors');
 var express = require('express');
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+
+var app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors:{
+    origin:'http://localhost:3000',
+    credentials: true,
+  },
+  cookie: true,
+  
+});
+
+module.exports = {app,httpServer,io};
+
+var createError = require('http-errors');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
+
 
 const mongoose = require("mongoose");
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
-var app = express();
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -58,4 +75,5 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+
+

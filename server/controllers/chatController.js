@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require("jsonwebtoken");
 const async = require("async")
 const mongoose = require("mongoose")
+const io = require("../app").io
 
 exports.get_messages = async (req,res,next) =>{
     try{
@@ -47,10 +48,27 @@ exports.send_message = async (req,res,next) =>{
         author:user._id,
         type:"String",
         message:message,
-        };
+      };
+      const onlineFriendsSocketId = {};
       if(chat.users.includes(user._id)){
         chat.messages.push(msg);
         await chat.save();
+        
+        await async.map(chat.users,async (data)=>{
+          let userData = await Users.findById(data).select({'password':0});
+          console.log('async chat.users :: ',userData.name,userData.socketId ,'\n')
+          if(userData.socketId){
+            if(userData.socketId !== ''){
+              //onlineFriendsSocketId[userData._id.toString()] = userData.socketId;
+              const sockets = await io.in(userData.socketId).fetchSockets();
+              console.log(sockets.length);
+
+              sockets[0].emit('new message',{newMsg: msg})
+            }
+          }
+          //groupMembers[data.toString()] = userData;
+        })
+
       }else{
         return res.status(401).json({msg: "Permission denied"});
       }
