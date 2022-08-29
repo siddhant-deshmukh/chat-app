@@ -21,9 +21,10 @@ router.post('/disconnect',auth,user_controller.remove_connection)
 //router.get('/personal/get-friend-list',auth,user_controller.get_friend_list)
 router.post('/personal/addmessage', auth, chat_controller.send_message)
 router.post('/personal/getmessage',auth, chat_controller.get_messages)
+router.post('/personal/getmessageinrange',auth, chat_controller.get_meesages_1)
 router.post('/personal/addFriend',auth, chat_controller.add_contact)
 router.post('/personal/sendmessage',auth,chat_controller.send_message)
-
+router.post('/personal/forwardmessages',auth,chat_controller.add_messages)
 //router.post('/', user_controller.login_user)
 
 module.exports = router;

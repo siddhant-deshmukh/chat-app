@@ -3,7 +3,7 @@ import React,{useState,useContext} from 'react'
 import {AuthContext} from '../../context/socket'
 
 function Login(props) {
-  const [userData,setUserData] =  useState({email:'g@g.com',password:'random'});
+  const [userData,setUserData] =  useState({email:'@v.com',password:'password'});
   const context = useContext(AuthContext);
   const {getUserData,logInUser} = context;
 //setIsLoggedIn,setAuthState,
