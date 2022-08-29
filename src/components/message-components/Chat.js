@@ -1,4 +1,4 @@
-import React,{useContext,useState,useRef} from 'react'
+import React,{useContext,useState,useRef,useCallback} from 'react'
 import { useEffect } from 'react';
 import {AuthContext} from '../../context/socket'
 import { config } from '../../config';
@@ -8,19 +8,71 @@ import Text from './Text';
 function Chat(props) {
   const context = useContext(AuthContext);
   const {authState,getMessages,socket} = context;
-  
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [page, setPage] = useState(1);
   const [messages,setMessages] = useState([]);
-//   console.log()
-    console.log('Reloading!!!!!!!!!!!!!!!!!!!!!!',messages.length)
-//   console.log()
+  
   const [members,setMembers] = useState({});
   const [msg,setMsg] = useState('');
   
   const messagesEndRef = useRef(null);
+  const loader = useRef(null);
+  const messageList = useRef(null);
+
   const scrollToBottom = () => {
     messagesEndRef.current.scrollIntoView();
-  };
+  };   
+  const scrollStay = () => {
+    //loader.current.scrollIntoView();
+  };    
   //useEffect(()=> {scrollToBottom()}, [messages]);
+
+  const getMessagesInRange = useCallback(async (cId,capacity,n) => {
+    try {
+      setLoading(true);
+      setError(false);
+      
+      const data  = await fetch(`${config.API_URL}/users/personal/getmessageinrange`,{
+            method:"POST",
+            headers:{
+              'Content-Type':'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                chatId : cId,
+                position:-1*page*capacity,
+                n:n
+            }),
+        });
+        const res = await data.json();
+    
+    console.log(res.messages[0].messages)
+    
+    setMessages((prev) => res.messages[0].messages.concat(prev));
+    setLoading(false);
+    } catch (err) {
+      setError(err);
+    }
+  }, [page]);
+  const handleObserver = useCallback((entries) => {
+    const target = entries[0];
+    if (target.isIntersecting) {
+      setPage((prev) => prev + 1);
+      console.log('!!!!!!!!!!!!!!!!!!!! :::::::::::::::::::::', page)
+    }
+  }, []);
+  useEffect(() => {
+    const option = {
+      root: document.querySelector('#message-list'),
+      rootMargin: "20px",
+      threshold: 0
+    };
+    const observer = new IntersectionObserver(handleObserver, option);
+    if (loader.current) observer.observe(loader.current);
+  }, [handleObserver]);
+
 
   useEffect(()=>{
     //console.log("This means at some point of time we really came here",socket.id,socket)
@@ -34,7 +86,7 @@ function Chat(props) {
         })
         console.log('newMessage',currMessages);
         setMessages((prev)=>{
-            return prev.concat(currMessages)
+            return currMessages.concat(prev)
         });
       })
 
@@ -48,15 +100,34 @@ function Chat(props) {
   useEffect(()=>{
     if(props.selected !== ''){
         getMessages(props.selected).then(data =>{
-            console.log()
-            console.log("data messages :",data.messages)
-            setMessages(data.messages);
+            //console.log()
+            console.log("data messages :",data.groupMembers)
+            //setMessages(data.messages);
             setMembers(data.groupMembers);
+
+            console.log('Something is happeing',props.selected)
+            setPage(1);
+            scrollToBottom();
         });
-        scrollToBottom();
+        
     }
   },[props.selected])
+
   
+  useEffect( ()=>{
+    let cId = props.selected
+    //scrollStay()
+    //disableScroll();
+    console.log('!!\t!!', messageList.current.style.overflow)
+    messageList.current.style.overflow = 'hidden';
+    console.log('\n', page,' \n')
+    getMessagesInRange(cId,10,10).then(()=>{
+      messageList.current.style.overflow = 'scroll';
+    });
+
+    //enableScroll();
+  },[page])
+
   const onChange = (e) => {
     setMsg(e.target.value)
   }
@@ -93,14 +164,14 @@ function Chat(props) {
 
   return (
     <div className='relative w-full' >
-        <div className='overflow-auto w-full h-full pb-12'>
-            <ul>
-
+        <div ref={messageList} style={{'overflowAnchor': 'none',position: "sticky"}} id='message-list' className='overflow-auto  w-full h-full pb-12'>
+            <div >
+                <div ref={loader} />
                 {messages.slice().map((ele,index)=>{
                     return <Text mainM={ele} key={ele.time.toString() + ele.tieBreaker.toString()} msgAuthor={ele.author.toString()} time={ele.time} msg={ele.message} author={members[ele.author].name} userId={authState.user._id.toString()}/>
                 })}
                 <div ref={messagesEndRef}></div>
-            </ul>
+            </div>
         </div>
 
         <div className='absolute inset-x-0 bottom-0'>
@@ -127,4 +198,4 @@ function Chat(props) {
   )
 }
 
-export default Chat
+export default Chat;
