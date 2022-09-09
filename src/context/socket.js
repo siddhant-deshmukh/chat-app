@@ -85,24 +85,10 @@ export const AuthProvider = (props)=> {
             setIsLoggedIn(false)
         }
     }
-    const getMessages = async(chatId) => {
-        let  data = await fetch(`${config.API_URL}/users/personal/getmessage`,{
-            method:"POST",
-            headers:{
-              'Content-Type':'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                chatId : chatId
-            }),
-        });
-        data = await data.json();
-        //console.log("ChatId" , chatId , data);
-        return data;
-    }
+    
     
     return(
-    <AuthContext.Provider value={{socket,authState,setAuthState,isLogedIn,setIsLoggedIn,getUserData,logInUser,getMessages}}>
+    <AuthContext.Provider value={{socket,authState,setAuthState,isLogedIn,setIsLoggedIn,getUserData,logInUser}}>
         {props.children}
     </AuthContext.Provider>
     );

@@ -7,6 +7,7 @@ const subSchema = new mongoose.Schema({
     time:{type:Date , default: Date.now()},
     tieBreaker: Number
 },{_id:false})
+
 const ChatSchema = new mongoose.Schema({
     users:[{type:mongoose.Schema.Types.ObjectId}],
     lastSeen:[{type:Date}],
