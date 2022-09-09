@@ -10,8 +10,8 @@ exports.get_messages = async (req,res,next) =>{
     try{
       const {chatId} = req.body;
       
-      if(!chatId || chatId===''){
-        return es.status(400).json({msg: "All input is required"});
+      if(!chatId){
+        res.status(400).json({msg: "All input is required"});
       }
   
       const chat = await Chat.findById(chatId);
@@ -39,18 +39,12 @@ exports.get_meesages_1 = async (req,res,next) =>{
   try{
     var {chatId,position,n} = req.body;
     
-    console.log('!!!!!!!!!!!!!!!!        Body         !!!!!!!!!!!!!!!!!!!!!1')
-    console.log(req.body)
-    if(!chatId || !position || !n || chatId==='' ){
-      return res.status(400).json({msg: "All input is required"});
+    if(!chatId && !position && !n){
+      res.status(400).json({msg: "All input is required"});
     }
 
     const chat = await Chat.findById(chatId).select({'users':1,'messages':1})
-    //n = chat.messages.length+position+n;
-    if(-1*position > chat.messages.length){
-      n= n+(position+chat.messages.length); 
-    }
-
+    n = chat.messages.length+position+n;
     if(n<0){return res.status(201).json({messages:[],position:-1*chat.messages.length,n:0});}
     const messages = await Chat.aggregate([
       {$match : {_id : mongoose.Types.ObjectId(chatId) , users:req.user._id }},
@@ -60,7 +54,7 @@ exports.get_meesages_1 = async (req,res,next) =>{
     ]);
 
     if(messages){ //chat.users.includes(req.user._id)
-      console.log(messages[0].messages.length,chat.messages.length)
+      
       return res.status(201).json({messages,position,n});
     }else{
       return res.status(400).json({msg: "Permission denied!"});
