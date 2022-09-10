@@ -24,7 +24,7 @@ function Chat(props) {
   const messageList = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current.scrollIntoView();;
+    messagesEndRef.current.scrollIntoView();
   };   
   const scrollStay = () => {
     //loader.current.scrollIntoView();
@@ -82,8 +82,7 @@ function Chat(props) {
     }
   },[props.selected])
 
- 
-
+  
   const handleObserver = useCallback((entries) => {
     const target = entries[0];
     if (target.isIntersecting) {
@@ -120,9 +119,9 @@ function Chat(props) {
         });
         const res = await data.json();
     
-    //console.log(res.messages[0].messages)
+    console.log(res.messages)
     
-    setMessages((prev) => res.messages[0].messages.concat(prev));
+    if(res.messages.length != 0) setMessages((prev) => res.messages[0].messages.concat(prev));
     setLoading(false);
     } catch (err) {
       setError(err);
@@ -130,7 +129,9 @@ function Chat(props) {
   }, [page]);
   useEffect( ()=>{
     let cId = props.selected
-    getMessagesInRange(cId,10,10)
+    if(cId != ""){
+      getMessagesInRange(cId,10,10)
+    }
     //enableScroll();
   },[page,getMessagesInRange])
 
