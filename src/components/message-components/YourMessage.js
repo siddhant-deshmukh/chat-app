@@ -1,8 +1,9 @@
 import React from "react";
-export function YourMessage({msg, setMsg, setMessages ,messages}) {
+import { config } from "../../config";
+export function YourMessage({selected, msg, setMsg, setMessages ,messages}) {
   
   const send_message = async () => {
-    if(props.selected === '') return;
+    if(selected === '') return;
     const suc = await fetch(`${config.API_URL}/users/personal/sendmessage`, {
         method:"POST",
         headers:{
@@ -10,7 +11,7 @@ export function YourMessage({msg, setMsg, setMessages ,messages}) {
         },
         credentials: 'include',
         body: JSON.stringify({
-            chatId : props.selected,
+            chatId : selected,
             message:msg,
         }),
     })
@@ -45,7 +46,7 @@ export function YourMessage({msg, setMsg, setMessages ,messages}) {
           <button
             type="button"
             className="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
-          >
+          > 
             <svg
               aria-hidden="true"
               className="w-6 h-6"

@@ -44,8 +44,10 @@ exports.get_meesages_1 = async (req,res,next) =>{
     }
 
     const chat = await Chat.findById(chatId).select({'users':1,'messages':1})
-    n = chat.messages.length+position+n;
-    if(n<0){return res.status(201).json({messages:[],position:-1*chat.messages.length,n:0});}
+    const newN = chat.messages.length+position+n;
+
+    console.log(position,n)
+    if(newN<0){return res.status(201).json({messages:[],position:-1*chat.messages.length,n:0});}
     const messages = await Chat.aggregate([
       {$match : {_id : mongoose.Types.ObjectId(chatId) , users:req.user._id }},
       {$project :{
