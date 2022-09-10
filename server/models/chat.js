@@ -9,7 +9,7 @@ const subSchema = new mongoose.Schema({
 },{_id:false})
 const ChatSchema = new mongoose.Schema({
     users:[{type:mongoose.Schema.Types.ObjectId}],
-    lastSeen:[{type:Date}],
+    lastSeen:{type:Map,of:Date},
     messages:[ subSchema ],
 })
 

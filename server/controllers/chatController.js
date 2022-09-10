@@ -5,12 +5,22 @@ const jwt = require("jsonwebtoken");
 const async = require("async")
 const mongoose = require("mongoose")
 const io = require("../app").io
+const ObjectId = require('mongoose').Types.ObjectId;
+function isValidObjectId(id){
+    
+  if(ObjectId.isValid(id)){
+      if((String)(new ObjectId(id)) === id)
+          return true;
+      return false;
+  }
+  return false;
+}
 
 exports.get_messages = async (req,res,next) =>{
     try{
       const {chatId} = req.body;
       
-      if(!chatId){
+      if(!chatId || chatId === ""){
         res.status(400).json({msg: "All input is required"});
       }
   
@@ -38,11 +48,11 @@ exports.get_messages = async (req,res,next) =>{
 exports.get_meesages_1 = async (req,res,next) =>{
   try{
     var {chatId,position,n} = req.body;
-    
-    if(!chatId && !position && !n){
-      res.status(400).json({msg: "All input is required"});
+    console.log(req.body)
+    if(!chatId || !position || !n || chatId === "" || !isValidObjectId(chatId)){
+      return res.status(400).json({msg: "All input is required"});
     }
-
+    
     const chat = await Chat.findById(chatId).select({'users':1,'messages':1})
     const newN = chat.messages.length+position+n;
 
@@ -54,9 +64,13 @@ exports.get_meesages_1 = async (req,res,next) =>{
         messages : {$slice : [ '$messages', position,n]}
       }}
     ]);
-
+   
+    if(!chat.lastSeen || typeof chat.lastSeen !== 'object'){
+      chat.lastSeen={}
+    }
+    chat.lastSeen.set( req.user._id.toString(),  new Date());
+    chat.save() 
     if(messages){ //chat.users.includes(req.user._id)
-      
       return res.status(201).json({messages,position,n});
     }else{
       return res.status(400).json({msg: "Permission denied!"});
@@ -64,12 +78,13 @@ exports.get_meesages_1 = async (req,res,next) =>{
     
   }catch (err){
     console.log(err);
+    res.status(400).json(err);
   }
 }
 exports.send_message = async (req,res,next) =>{
     try{
       const {chatId,message} = req.body;
-      if(!chatId ){return res.status(301).json({msg: "All input is required"});}
+      if(!chatId || chatId === ""){return res.status(301).json({msg: "All input is required"});}
       
       const chat = await Chat.findById(chatId);
       if(!chat){return res.status(301).json({msg: "Chat not found"});}
@@ -117,6 +132,7 @@ exports.send_message = async (req,res,next) =>{
       }
       return res.status(201).json({msg: [msg]});
     }catch (err){
+      res.status(400).json(err);
       console.log(err);
     }
 }
@@ -215,5 +231,6 @@ exports.add_messages = async (req,res,next) =>{
     return res.status(201).json({msg: messages});
   }catch (err){
     console.log(err);
+    res.status(400).json(err);
   }
 }

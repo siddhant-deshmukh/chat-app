@@ -3,6 +3,7 @@ import React from 'react'
 function FriendCard(props) {
   const changeSelected = (e) =>{
     props.setSelected(props.chatId)
+    console.log(props.chatId)
   }
   return (
     <li className="py-3 sm:py-4 hover:bg-slate-200">
@@ -13,7 +14,7 @@ function FriendCard(props) {
                     {props.value.name}
                 </p>
                 <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-                    {props.value.email}
+                    {( props.value.lastMessage) ? props.value.lastMessage.message: ""}
                 </p>
             </div>
             

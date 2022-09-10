@@ -2,7 +2,7 @@ const Users = require('../models/users');
 const Chat = require('../models/chat')
 const bcrypt = require('bcryptjs')
 const jwt = require("jsonwebtoken");
-const async = require("async")
+const Async = require("async")
 const mongoose = require("mongoose")
 
 exports.register_user = async (req,res,next) => {
@@ -153,20 +153,37 @@ exports.send_message = async (req,res,next) =>{
 
 exports.get_user_data = async (req,res,next) =>{
   try{
-    const friends = {};
+    const chatObjects = [];
     
-    for(const ele of req.user.contact){
+    await Async.map(req.user.contact,async (ele)=> {
       //console.log(ele.uId.toString(),friends);
-      const friend = await Users.findById(ele.uId.toString()).select({'password':0});
-      friends[ele.chatId.toString()] = {
-        name : friend.name,
-        email : friend.email,
-        friendId : ele.uId.toString(),
-      }
+      const chat = await Chat.findById(ele.chatId.toString()).select({'password':0});
+      const chatMessages = chat.messages.slice(-100)
       
-    }
-    //console.log(friends)
-    return res.status(201).json({user : req.user ,friends});
+      var i=0;
+      if(chatMessages.length != 0 && chat.lastSeen.get(req.user._id.toString())){
+        for(i=chatMessages.length-1;i>=0;i--){
+          console.log(chat.lastSeen.get(req.user._id.toString()),chatMessages.length,chatMessages[i])
+          if(chatMessages[i].time.toString() < chat.lastSeen.get(req.user._id.toString()).toString() ){
+            break;
+          }
+        }
+      }
+      var name="";
+      if(chat.users.length === 2){
+        const friendId=  chat.users.filter((e)=>{return e._id.toString() !== req.user._id.toString()})[0]
+        const friend = await Users.findById(friendId)
+        name = friend.name
+      }
+
+      chatObjects.push({
+        name,
+        chatId : ele.chatId.toString(),
+        unreadCount:chatMessages.length-i-1,
+        lastMessage:chatMessages.slice(-1)[0]
+      })
+    })
+    return res.status(201).json({user : req.user ,chats : chatObjects});
   }catch(err){
     console.log(err);
   }
@@ -194,7 +211,7 @@ exports.get_messages = async (req,res,next) =>{
 
     const groupMembers = {};
     
-    await async.map(chat.users,async (data)=>{
+    await Async.map(chat.users,async (data)=>{
       let userData = await Users.findById(data).select({'name':1,'email':1});
       groupMembers[data.toString()] = userData;
     })
